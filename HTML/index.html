@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111111">
+    <title>Home Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="dashboard">
+      <header class="topbar">
+        <div>
+          <h1 id="greeting">Good evening</h1>
+        </div>
+        <button class="button button-glass button-small" id="settings-button" type="button">Settings</button>
+      </header>
+
+      <section class="health-grid" aria-label="Health summary">
+        <article class="metric-card" aria-label="Today's steps">
+          <div class="metric-ring" id="steps-ring">
+            <div class="metric-ring-content">
+              <strong id="steps-value">0</strong>
+              <span>steps</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="metric-card" aria-label="Sleep duration">
+          <div class="metric-ring sleep-ring">
+            <div class="metric-ring-content">
+              <strong id="sleep-value">0h 0min</strong>
+              <span>asleep</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="shortcuts-section" aria-labelledby="shortcuts-heading">
+        <div class="section-heading">
+          <button class="button button-glass button-small" id="edit-shortcuts" type="button">Edit shortcuts</button>
+        </div>
+        <div class="shortcut-grid" id="shortcut-grid"></div>
+      </section>
+    </main>
+
+    <dialog class="settings-dialog glass-panel" id="settings-dialog">
+      <form method="dialog" id="settings-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">Customize</p>
+            <h2>Dashboard settings</h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Close settings">×</button>
+        </div>
+
+        <label class="field-label" for="accent-color">Accent color</label>
+        <input id="accent-color" type="color" value="#b7ff5a">
+
+        <label class="field-label" for="background-image">Background image</label>
+        <input id="background-image" type="file" accept="image/*">
+        <button class="button button-dark" id="remove-background" type="button">Remove background</button>
+
+        <div class="dialog-actions">
+          <button class="button button-dark" value="cancel">Close</button>
+          <button class="button button-accent" id="save-settings" value="default">Save settings</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="settings-dialog glass-panel" id="shortcuts-dialog">
+      <form method="dialog" id="shortcuts-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">Customize</p>
+            <h2>Edit shortcuts</h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Close shortcut editor">×</button>
+        </div>
+        <p class="dialog-note">Add up to 10 websites. Use a full URL, including https://.</p>
+        <div id="shortcut-fields"></div>
+        <button class="button button-glass add-shortcut" id="add-shortcut" type="button">Add shortcut</button>
+        <div class="dialog-actions">
+          <button class="button button-dark" value="cancel">Cancel</button>
+          <button class="button button-accent" id="save-shortcuts" value="default">Save shortcuts</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,4 +1,7 @@
 require('dotenv').config();
+const http = require('node:http');
+const fs = require('node:fs/promises');
+const path = require('node:path');
 
 // Fetch every page of data points for one Health API data type.
 async function getAllDataPoints(
@@ -60,7 +63,7 @@ async function getAllDataPoints(
 
 // "async" marks this function as one that performs work that may finish later.
 // "await" below pauses this function until a network request finishes.
-async function main() {
+async function getHealthData() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://www.google.com';
@@ -292,19 +295,70 @@ async function main() {
     dailySteps += Number(point.steps.count) || 0;
   }
 
-  // An object passed to console.log prints named results.
-  // The field: value syntax is similar to assigning fields in a C++ struct.
-  console.log({
+  return {
     dailySteps: dailySteps,
     stepGoal: stepGoal,
     sleepHours: sleepHours,
-  });
+  };
 }
 
-// Calling an async function returns a Promise, which represents work that
-// may finish later. catch() handles an error thrown anywhere in main().
-// process.exitCode = 1 tells the shell that the program failed.
-main().catch(function (error) {
-  console.error(error);
-  process.exitCode = 1;
+const htmlDirectory = path.join(__dirname, 'HTML');
+const contentTypes = {
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+};
+
+async function serveFile(response, pathname) {
+  const fileName = pathname === '/' ? 'index.html' : pathname.slice(1);
+  const filePath = path.resolve(htmlDirectory, fileName);
+  if (!filePath.startsWith(`${htmlDirectory}${path.sep}`)) {
+    response.writeHead(403);
+    response.end('Forbidden');
+    return;
+  }
+
+  try {
+    const file = await fs.readFile(filePath);
+    response.writeHead(200, {
+      'Content-Type': contentTypes[path.extname(filePath)] || 'application/octet-stream',
+    });
+    response.end(file);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      response.writeHead(404);
+      response.end('Not found');
+      return;
+    }
+    throw error;
+  }
+}
+
+const server = http.createServer(async (request, response) => {
+  try {
+    const requestUrl = new URL(request.url, 'http://localhost');
+    if (requestUrl.pathname === '/api/health') {
+      const healthData = await getHealthData();
+      response.writeHead(200, {'Content-Type': 'application/json; charset=utf-8'});
+      response.end(JSON.stringify(healthData));
+      return;
+    }
+
+    if (request.method !== 'GET') {
+      response.writeHead(405);
+      response.end('Method not allowed');
+      return;
+    }
+
+    await serveFile(response, requestUrl.pathname);
+  } catch (error) {
+    console.error(error);
+    response.writeHead(503, {'Content-Type': 'application/json; charset=utf-8'});
+    response.end(JSON.stringify({error: 'Health data is unavailable.'}));
+  }
+});
+
+const port = Number(process.env.PORT || 3000);
+server.listen(port, () => {
+  console.log(`Home page available at http://localhost:${port}`);
 });

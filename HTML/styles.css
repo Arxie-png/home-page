@@ -1,0 +1,178 @@
+:root {
+  color-scheme: dark;
+  --accent: #b7ff5a;
+  --ink: #f5f5f5;
+  --muted: #b6b6b6;
+  --line: rgba(255, 255, 255, 0.2);
+  --glass: rgba(12, 12, 12, 0.58);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --ink: #151515;
+    --muted: #5d5d5d;
+    --line: rgba(0, 0, 0, 0.16);
+    --glass: rgba(255, 255, 255, 0.68);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #202020;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.25));
+}
+
+.dashboard {
+  width: min(1120px, calc(100% - 40px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: clamp(32px, 7vw, 88px) 0 56px;
+}
+
+.topbar, .section-heading, .dialog-heading, .dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 0; font-size: clamp(2.2rem, 6vw, 4.8rem); letter-spacing: -0.07em; }
+h2 { margin-bottom: 0; font-size: 1.1rem; }
+
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 48px;
+  max-width: 420px;
+  margin: clamp(60px, 10vh, 120px) auto 0;
+}
+
+.glass-panel, .shortcut-tile {
+  border: 1px solid var(--line);
+  background: var(--glass);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.metric-card {
+  display: grid;
+  place-items: center;
+}
+
+.metric-ring {
+  --progress: 0%;
+  display: grid;
+  flex: 0 0 126px;
+  width: 126px;
+  height: 126px;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) var(--progress), rgba(255, 255, 255, 0.16) 0);
+}
+
+.metric-ring::before {
+  width: 108px;
+  height: 108px;
+  content: "";
+  border-radius: 50%;
+  background: var(--glass);
+}
+
+.metric-ring-content {
+  position: absolute;
+  display: grid;
+  place-items: center;
+}
+
+.metric-ring-content strong { font-size: 1.25rem; }
+.metric-ring-content span { color: var(--muted); font-size: 0.8rem; }
+
+.shortcuts-section { max-width: 920px; margin: clamp(48px, 7vh, 88px) auto 0; }
+.shortcut-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.shortcut-tile {
+  display: grid;
+  flex: 0 1 96px;
+  min-height: 96px;
+  padding: 12px 8px 8px;
+  color: var(--ink);
+  text-align: center;
+  text-decoration: none;
+  border-radius: 18px;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.shortcut-tile:hover, .shortcut-tile:focus-visible { transform: translateY(-4px); border-color: var(--accent); }
+.shortcut-tile img { width: 34px; height: 34px; margin: auto; border-radius: 8px; }
+.shortcut-tile span { overflow: hidden; margin-top: 12px; font-size: 0.78rem; text-overflow: ellipsis; white-space: nowrap; }
+
+.button, .icon-button, input { font: inherit; }
+.button {
+  padding: 10px 15px;
+  color: var(--ink);
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.button-small { padding: 7px 11px; font-size: 0.75rem; }
+.button-glass { background: var(--glass); }
+.button-dark { color: white; background: #171717; }
+.button-accent { color: #111; background: var(--accent); border-color: var(--accent); }
+.button:hover, .icon-button:hover { filter: brightness(1.12); }
+
+dialog {
+  width: min(500px, calc(100% - 32px));
+  padding: 28px;
+  color: var(--ink);
+  border-radius: 24px;
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); }
+.icon-button { padding: 0 8px; color: var(--ink); font-size: 1.7rem; background: transparent; border: 0; cursor: pointer; }
+.field-label { display: block; margin: 22px 0 8px; font-size: 0.82rem; font-weight: 700; }
+input[type="color"] { width: 100%; height: 42px; padding: 2px; cursor: pointer; background: transparent; border: 1px solid var(--line); border-radius: 8px; }
+input[type="file"], .shortcut-field input { width: 100%; padding: 10px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 8px; }
+.dialog-note { margin: 22px 0; color: var(--muted); font-size: 0.85rem; }
+.shortcut-field { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 10px; }
+.shortcut-field button { color: var(--muted); background: transparent; border: 0; cursor: pointer; }
+.add-shortcut { margin-top: 8px; }
+.dialog-actions { justify-content: flex-end; margin-top: 28px; }
+
+@media (max-width: 680px) {
+  .health-grid { grid-template-columns: 1fr; }
+  .metric-card { min-height: 180px; }
+  .shortcut-field { grid-template-columns: 1fr; }
+  .shortcut-field button { justify-self: end; }
+}
