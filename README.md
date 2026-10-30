@@ -1,4 +1,14 @@
-This is a personal project meant to help with learning JavaScript and using Google Cloud APIs.
+# Home Page
+
+A customizable home-screen-style dashboard that displays fitness information and
+provides quick access to frequently used websites.
+
+## Features
+
+- Displays daily steps and sleep data from the Google Health API.
+- Provides editable website shortcuts with automatically loaded logos.
+- Supports custom accent colors, background colors, and background images.
+- Stores shortcut and appearance preferences locally in the browser.
 
 ## Setup
 
@@ -9,7 +19,7 @@ This is a personal project meant to help with learning JavaScript and using Goog
    ```
 
 2. Copy `.env.example` to `.env` and set `GOOGLE_CLIENT_ID` and
-   `   GOOGLE_CLIENT_SECRET` from your Google Cloud project. Keep `.env` private.
+   `GOOGLE_CLIENT_SECRET` from your Google Cloud project. Keep `.env` private.
 
 3. Start the web server:
 
@@ -25,4 +35,5 @@ restart the server. If Google Health is unavailable, the page displays `No data`
 
 ## Goal
 
-Show fitness information from a Fitbit Air on a home-screen-style page in the browser.
+Create a practical, configurable browser homepage that combines fitness data
+with useful shortcuts.
