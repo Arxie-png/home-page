@@ -12,6 +12,42 @@ const state = {
 
 const $ = (selector) => document.querySelector(selector);
 
+function getShortcutLogoSources(url) {
+  try {
+    const shortcutUrl = new URL(url);
+    const hostname = shortcutUrl.hostname;
+    return [
+      `https://www.google.com/s2/favicons?domain_url=${encodeURIComponent(shortcutUrl.origin)}&sz=256`,
+      `https://icons.duckduckgo.com/ip3/${encodeURIComponent(hostname)}.ico`,
+    ];
+  } catch {
+    return [];
+  }
+}
+
+function createShortcutLogo(url, name) {
+  const logo = document.createElement('img');
+  const sources = getShortcutLogoSources(url);
+  logo.alt = `${name} logo`;
+  logo.width = 256;
+  logo.height = 256;
+  logo.loading = 'lazy';
+  logo.decoding = 'async';
+
+  const useNextSource = () => {
+    const nextSource = sources.shift();
+    if (nextSource) {
+      logo.src = nextSource;
+    } else {
+      logo.hidden = true;
+    }
+  };
+
+  logo.addEventListener('error', useNextSource);
+  useNextSource();
+  return logo;
+}
+
 function renderShortcuts() {
   const grid = $('#shortcut-grid');
   grid.replaceChildren();
@@ -21,7 +57,13 @@ function renderShortcuts() {
     link.href = url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.innerHTML = `<span class="shortcut-logo"><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(url)}&sz=64" alt=""></span><span class="shortcut-name">${name}</span>`;
+    const logoContainer = document.createElement('span');
+    logoContainer.className = 'shortcut-logo';
+    logoContainer.append(createShortcutLogo(url, name));
+    const shortcutName = document.createElement('span');
+    shortcutName.className = 'shortcut-name';
+    shortcutName.textContent = name;
+    link.append(logoContainer, shortcutName);
     grid.append(link);
   });
 }
