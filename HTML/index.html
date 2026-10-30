@@ -37,11 +37,10 @@
       </section>
 
       <section class="shortcuts-section" aria-labelledby="shortcuts-heading">
-        <div class="section-heading">
-          <button class="button button-glass button-small" id="edit-shortcuts" type="button">Edit shortcuts</button>
-        </div>
         <div class="shortcut-grid" id="shortcut-grid"></div>
       </section>
+      <button class="button button-glass button-small edit-shortcuts-button" id="edit-shortcuts" type="button">Edit shortcuts</button>
+
     </main>
 
     <dialog class="settings-dialog glass-panel" id="settings-dialog">
@@ -57,13 +56,16 @@
         <label class="field-label" for="accent-color">Accent color</label>
         <input id="accent-color" type="color" value="#b7ff5a">
 
+        <label class="field-label" for="background-color">Background color</label>
+        <input id="background-color" type="color" value="#5a5a5a">
+
         <label class="field-label" for="background-image">Background image</label>
         <input id="background-image" type="file" accept="image/*">
-        <button class="button button-dark" id="remove-background" type="button">Remove background</button>
+        <button class="button button-dark remove-background" id="remove-background" type="button">Remove background</button>
 
         <div class="dialog-actions">
           <button class="button button-dark" value="cancel">Close</button>
-          <button class="button button-accent" id="save-settings" value="default">Save settings</button>
+          <button class="button button-dark" id="save-settings" value="default">Save settings</button>
         </div>
       </form>
     </dialog>
@@ -79,10 +81,10 @@
         </div>
         <p class="dialog-note">Add up to 10 websites. Use a full URL, including https://.</p>
         <div id="shortcut-fields"></div>
-        <button class="button button-glass add-shortcut" id="add-shortcut" type="button">Add shortcut</button>
+        <button class="button button-dark add-shortcut" id="add-shortcut" type="button">Add shortcut</button>
         <div class="dialog-actions">
           <button class="button button-dark" value="cancel">Cancel</button>
-          <button class="button button-accent" id="save-shortcuts" value="default">Save shortcuts</button>
+          <button class="button button-dark" id="save-shortcuts" value="default">Save shortcuts</button>
         </div>
       </form>
     </dialog>

@@ -20,3 +20,5 @@ DESIGN DIRECTION SELECTED
  - Shortcut tile treatment: glass tiles — lightly translucent boxes over the background image, with a soft border
  - Shortcut editing: settings mode — an Edit Shortcuts control opens a simple editor; normal clicks always open websites
  - Design status: finalized for frontend implementation
+ - Canvas integration: use the Node backend to securely fetch Canvas announcements and assignments due
+ - Canvas layout: show announcements and assignments due in two equal side-by-side boxes on wide screens, stacked on mobile

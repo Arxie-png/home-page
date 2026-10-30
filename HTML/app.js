@@ -7,6 +7,7 @@ const defaultShortcuts = [
 const state = {
   shortcuts: JSON.parse(localStorage.getItem('shortcuts') || 'null') || defaultShortcuts,
   accent: localStorage.getItem('accent') || '#b7ff5a',
+  backgroundColor: localStorage.getItem('backgroundColor') || '#5a5a5a',
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -20,7 +21,7 @@ function renderShortcuts() {
     link.href = url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.innerHTML = `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(url)}&sz=64" alt=""><span>${name}</span>`;
+    link.innerHTML = `<span class="shortcut-logo"><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(url)}&sz=64" alt=""></span><span class="shortcut-name">${name}</span>`;
     grid.append(link);
   });
 }
@@ -28,20 +29,44 @@ function renderShortcuts() {
 function renderShortcutFields() {
   const fields = $('#shortcut-fields');
   fields.replaceChildren();
-  state.shortcuts.forEach((shortcut, index) => {
-    const row = document.createElement('div');
-    row.className = 'shortcut-field';
-    row.innerHTML = `
-      <input aria-label="Shortcut ${index + 1} name" value="${shortcut.name}" placeholder="Website name">
-      <input aria-label="Shortcut ${index + 1} URL" value="${shortcut.url}" placeholder="https://example.com" type="url">
-      <button type="button" aria-label="Remove shortcut">Remove</button>
-    `;
-    row.querySelector('button').addEventListener('click', () => {
-      row.remove();
-    });
-    fields.append(row);
-  });
+  state.shortcuts.forEach((shortcut, index) => appendShortcutField(shortcut, index));
   $('#add-shortcut').disabled = fields.children.length >= 10;
+}
+
+function appendShortcutField(shortcut, index) {
+  const fields = $('#shortcut-fields');
+  const row = document.createElement('div');
+  row.className = 'shortcut-field';
+  row.innerHTML = `
+    <input aria-label="Shortcut ${index + 1} name" value="${shortcut.name}" placeholder="Website name">
+    <input aria-label="Shortcut ${index + 1} URL" value="${shortcut.url}" placeholder="https://example.com" type="url">
+    <button type="button" aria-label="Remove shortcut">Remove</button>
+  `;
+  row.querySelector('button').addEventListener('click', () => {
+    row.remove();
+    $('#add-shortcut').disabled = fields.children.length >= 10;
+  });
+  fields.append(row);
+}
+
+function readShortcutFields() {
+  return [...$('#shortcut-fields').children].map((row) => {
+    const [name, url] = row.querySelectorAll('input');
+    return { name: name.value.trim(), url: url.value.trim() };
+  }).filter((shortcut) => shortcut.name && shortcut.url);
+}
+
+function updateShortcutEditorLimit() {
+  $('#add-shortcut').disabled = $('#shortcut-fields').children.length >= 10;
+}
+
+// Keep unsaved editor rows separate from saved shortcuts so adding a row does
+// not restore a shortcut that was removed.
+function addEmptyShortcutField() {
+  const fields = $('#shortcut-fields');
+  if (fields.children.length >= 10) return;
+  appendShortcutField({ name: '', url: '' }, fields.children.length);
+  updateShortcutEditorLimit();
 }
 
 function setHealthData(data) {
@@ -55,7 +80,9 @@ function setHealthData(data) {
 
 async function loadHealthData() {
   try {
-    const response = await fetch('/api/health');
+    const response = await fetch('/api/health', {
+      cache: 'no-store',
+    });
     if (!response.ok) {
       throw new Error(`Health API returned ${response.status}`);
     }
@@ -74,8 +101,11 @@ $('#edit-shortcuts').addEventListener('click', () => {
 
 $('#save-settings').addEventListener('click', () => {
   state.accent = $('#accent-color').value;
+  state.backgroundColor = $('#background-color').value;
   localStorage.setItem('accent', state.accent);
+  localStorage.setItem('backgroundColor', state.backgroundColor);
   document.documentElement.style.setProperty('--accent', state.accent);
+  document.body.style.backgroundColor = state.backgroundColor;
 });
 
 $('#background-image').addEventListener('change', (event) => {
@@ -95,22 +125,19 @@ $('#remove-background').addEventListener('click', () => {
 });
 
 $('#add-shortcut').addEventListener('click', () => {
-  const fields = $('#shortcut-fields');
-  if (fields.children.length >= 10) return;
-  state.shortcuts.push({ name: '', url: '' });
-  renderShortcutFields();
+  addEmptyShortcutField();
 });
 
 $('#save-shortcuts').addEventListener('click', () => {
-  state.shortcuts = [...$('#shortcut-fields').children].map((row) => {
-    const [name, url] = row.querySelectorAll('input');
-    return { name: name.value.trim(), url: url.value.trim() };
-  }).filter((shortcut) => shortcut.name && shortcut.url);
+  state.shortcuts = readShortcutFields();
   localStorage.setItem('shortcuts', JSON.stringify(state.shortcuts));
   renderShortcuts();
 });
 
 document.documentElement.style.setProperty('--accent', state.accent);
+document.body.style.backgroundColor = state.backgroundColor;
+$('#accent-color').value = state.accent;
+$('#background-color').value = state.backgroundColor;
 const savedBackground = localStorage.getItem('backgroundImage');
 if (savedBackground) document.body.style.backgroundImage = `url("${savedBackground}")`;
 renderShortcuts();

@@ -339,11 +339,13 @@ const server = http.createServer(async (request, response) => {
     const requestUrl = new URL(request.url, 'http://localhost');
     if (requestUrl.pathname === '/api/health') {
       const healthData = await getHealthData();
-      response.writeHead(200, {'Content-Type': 'application/json; charset=utf-8'});
+      response.writeHead(200, {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'application/json; charset=utf-8',
+      });
       response.end(JSON.stringify(healthData));
       return;
     }
-
     if (request.method !== 'GET') {
       response.writeHead(405);
       response.end('Method not allowed');
