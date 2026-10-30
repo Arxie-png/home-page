@@ -1,4 +1,5 @@
 require('dotenv').config();
+const crypto = require('node:crypto');
 const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -334,9 +335,124 @@ async function serveFile(response, pathname) {
   }
 }
 
+const sessionDurationSeconds = 60 * 60 * 24 * 7;
+const rememberedSessionDurationSeconds = 60 * 60 * 24 * 30;
+
+function getSessionToken(durationSeconds) {
+  const password = process.env.APP_PASSWORD;
+  if (!password) return null;
+  const expiresAt = Math.floor(Date.now() / 1000) + durationSeconds;
+  const payload = `${expiresAt}`;
+  const signature = crypto.createHmac('sha256', password).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function hasValidSession(request) {
+  const password = process.env.APP_PASSWORD;
+  const cookies = request.headers.cookie || '';
+  const token = cookies.split(';').map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith('home_session='))?.slice('home_session='.length);
+  if (!password || !token) return false;
+
+  const [expiresAt, signature] = token.split('.');
+  if (!expiresAt || !signature || Number(expiresAt) < Math.floor(Date.now() / 1000)) return false;
+  const expectedSignature = crypto.createHmac('sha256', password).update(expiresAt).digest('base64url');
+  const provided = Buffer.from(signature);
+  const expected = Buffer.from(expectedSignature);
+  return provided.length === expected.length && crypto.timingSafeEqual(provided, expected);
+}
+
+function sendLoginPage(response, status = 200) {
+  response.writeHead(status, {
+    'Cache-Control': 'no-store',
+    'Content-Type': 'text/html; charset=utf-8',
+  });
+  response.end(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home Dashboard Login</title>
+    <style>
+      body { display: grid; min-height: 100vh; margin: 0; place-items: center; color: #f5f5f5; background: #171717; font: 16px system-ui, sans-serif; }
+      form { display: grid; gap: 16px; width: min(360px, calc(100% - 40px)); padding: 28px; border: 1px solid #444; border-radius: 20px; background: #292929; }
+      h1 { margin: 0; font-size: 1.5rem; } label { display: grid; gap: 8px; }
+      input:not([type="checkbox"]), button { padding: 12px; font: inherit; border-radius: 10px; }
+      input:not([type="checkbox"]) { color: #fff; background: #171717; border: 1px solid #555; }
+      input[type="checkbox"] { margin-right: 8px; }
+      button { color: #111; cursor: pointer; background: #b7ff5a; border: 0; }
+    </style>
+  </head>
+  <body>
+    <form method="post" action="/api/login">
+      <h1>Home Dashboard</h1>
+      <label>Password <input type="password" name="password" autocomplete="current-password" required autofocus></label>
+      <label><span><input type="checkbox" name="remember"> Remember this device for 30 days</span></label>
+      <button type="submit">Log in</button>
+    </form>
+  </body>
+</html>`);
+}
+
+async function readRequestBody(request) {
+  let body = '';
+  for await (const chunk of request) {
+    body += chunk;
+    if (body.length > 2048) throw new Error('Request body too large');
+  }
+  return body;
+}
+
 const server = http.createServer(async (request, response) => {
   try {
     const requestUrl = new URL(request.url, 'http://localhost');
+    if (requestUrl.pathname === '/login' && request.method === 'GET') {
+      sendLoginPage(response);
+      return;
+    }
+    if (requestUrl.pathname === '/api/login' && request.method === 'POST') {
+      if (!process.env.APP_PASSWORD) {
+        throw new Error('APP_PASSWORD is not configured.');
+      }
+      const body = await readRequestBody(request);
+      const form = new URLSearchParams(body);
+      const password = form.get('password') || '';
+      if (password !== process.env.APP_PASSWORD) {
+        sendLoginPage(response, 401);
+        return;
+      }
+      const durationSeconds = form.get('remember') === 'on'
+        ? rememberedSessionDurationSeconds
+        : sessionDurationSeconds;
+      response.writeHead(303, {
+        'Cache-Control': 'no-store',
+        'Location': '/',
+        'Set-Cookie': `home_session=${getSessionToken(durationSeconds)}; Max-Age=${durationSeconds}; HttpOnly; Secure; SameSite=Strict; Path=/`,
+      });
+      response.end();
+      return;
+    }
+    if (requestUrl.pathname === '/api/logout' && request.method === 'POST') {
+      response.writeHead(303, {
+        'Cache-Control': 'no-store',
+        'Location': '/login',
+        'Set-Cookie': 'home_session=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/',
+      });
+      response.end();
+      return;
+    }
+    if (!process.env.APP_PASSWORD) {
+      throw new Error('APP_PASSWORD is not configured.');
+    }
+    if (!hasValidSession(request)) {
+      if (requestUrl.pathname.startsWith('/api/')) {
+        response.writeHead(401, {'Content-Type': 'application/json; charset=utf-8'});
+        response.end(JSON.stringify({error: 'Authentication required.'}));
+      } else {
+        sendLoginPage(response);
+      }
+      return;
+    }
     if (requestUrl.pathname === '/api/health') {
       const healthData = await getHealthData();
       response.writeHead(200, {

@@ -19,7 +19,8 @@ provides quick access to frequently used websites.
    ```
 
 2. Copy `.env.example` to `.env` and set `GOOGLE_CLIENT_ID` and
-   `GOOGLE_CLIENT_SECRET` from your Google Cloud project. Keep `.env` private.
+   `   GOOGLE_CLIENT_SECRET` from your Google Cloud project. Set `APP_PASSWORD` to a
+   unique password for the dashboard. Keep `.env` private.
 
 3. Start the web server:
 
